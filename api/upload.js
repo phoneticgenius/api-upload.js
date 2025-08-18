@@ -7,34 +7,47 @@ const DROPBOX_ACCESS_TOKEN = process.env.DROPBOX_ACCESS_TOKEN;
 // Initialize Dropbox client
 const dbx = new Dropbox({ accessToken: DROPBOX_ACCESS_TOKEN });
 
+const enableCors = (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+};
+
 module.exports = async (req, res) => {
-    // Only allow POST requests for security
+    enableCors(req, res);
+
+    if (req.method === 'OPTIONS') {
+        res.status(204).end();
+        return;
+    }
+    
     if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method Not Allowed' });
+        res.status(405).json({ error: 'Method Not Allowed' });
+        return;
     }
     
     try {
         const { image } = req.body;
         if (!image) {
-            return res.status(400).json({ error: 'Image data is missing.' });
+            res.status(400).json({ error: 'Image data is missing.' });
+            return;
         }
 
         const matches = image.match(/^data:image\/(png|jpeg);base64,(.+)$/);
         if (!matches) {
-            return res.status(400).json({ error: 'Invalid image data format.' });
+            res.status(400).json({ error: 'Invalid image data format.' });
+            return;
         }
 
         const buffer = Buffer.from(matches[2], 'base64');
         const filename = `/drawings/drawing-${Date.now()}.png`;
 
-        // Upload the file to Dropbox
         const uploadResult = await dbx.filesUpload({
             path: filename,
             contents: buffer,
             mode: 'overwrite'
         });
 
-        // Get a public, shareable link for the uploaded file
         const shareResult = await dbx.sharingCreateSharedLinkWithSettings({
             path: uploadResult.result.path_display,
             settings: {
@@ -42,7 +55,6 @@ module.exports = async (req, res) => {
             }
         });
 
-        // Dropbox provides a different link type; convert it for direct access
         const publicUrl = shareResult.result.url.replace('dl=0', 'dl=1');
 
         res.status(200).json({ url: publicUrl });
