@@ -1,0 +1,12 @@
+{
+  "name": "dropbox-uploader",
+  "version": "1.0.0",
+  "main": "api/upload.js",
+  "private": true,
+  "scripts": {
+    "start": "node api/upload.js"
+  },
+  "dependencies": {
+    "dropbox": "^10.0.0"
+  }
+}
