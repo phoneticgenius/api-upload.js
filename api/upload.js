@@ -56,7 +56,11 @@ module.exports = async (req, res) => {
         path: uploadResult.result.path_display,
         settings: { requested_visibility: 'public' },
       });
-      publicUrl = shareResult.result.url.replace('dl=0', 'dl=1');
+      // Corrected: Replace 'www' with 'dl.dropboxusercontent' for direct viewing
+      publicUrl = shareResult.result.url.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+      // Remove any query parameters like ?dl=0 to ensure the browser renders the file
+      publicUrl = publicUrl.split('?')[0];
+
     } catch (e) {
       // If link already exists, fetch it
       const links = await dbx.sharingListSharedLinks({
@@ -64,7 +68,8 @@ module.exports = async (req, res) => {
         direct_only: true,
       });
       if (links.result.links.length > 0) {
-        publicUrl = links.result.links[0].url.replace('dl=0', 'dl=1');
+        // Corrected for existing links as well
+        publicUrl = links.result.links[0].url.replace('www.dropbox.com', 'dl.dropboxusercontent.com').split('?')[0];
       } else {
         throw e; // rethrow if something else went wrong
       }
