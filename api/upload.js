@@ -57,8 +57,8 @@ module.exports = async (req, res) => {
         settings: { requested_visibility: 'public' },
       });
 
-      // Get the URL and add the '?dl=0' parameter to ensure it opens in the browser
-      publicUrl = shareResult.result.url.split('?')[0] + '?dl=0';
+      // Use the URL exactly as returned and then ensure it has the '?dl=0' parameter
+      publicUrl = shareResult.result.url.replace('dl=1', 'dl=0');
 
     } catch (e) {
       // If the link already exists, we will get a conflict error (409).
@@ -71,7 +71,7 @@ module.exports = async (req, res) => {
 
         if (links.result.links.length > 0) {
           // Get the existing URL and ensure it has the '?dl=0' parameter
-          publicUrl = links.result.links[0].url.split('?')[0] + '?dl=0';
+          publicUrl = links.result.links[0].url.replace('dl=1', 'dl=0');
         } else {
           // If the link is not found, something is wrong
           throw e;
