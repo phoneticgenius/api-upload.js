@@ -49,29 +49,36 @@ module.exports = async (req, res) => {
       mode: { '.tag': 'overwrite' },
     });
 
-    // Create or retrieve shared link
+    // Create or retrieve a shared link that opens in the browser
     let publicUrl;
     try {
       const shareResult = await dbx.sharingCreateSharedLinkWithSettings({
         path: uploadResult.result.path_display,
         settings: { requested_visibility: 'public' },
       });
-      // Corrected: Replace 'www' with 'dl.dropboxusercontent' for direct viewing
-      publicUrl = shareResult.result.url.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
-      // Remove any query parameters like ?dl=0 to ensure the browser renders the file
-      publicUrl = publicUrl.split('?')[0];
+
+      // Get the URL and add the '?dl=0' parameter to ensure it opens in the browser
+      publicUrl = shareResult.result.url.split('?')[0] + '?dl=0';
 
     } catch (e) {
-      // If link already exists, fetch it
-      const links = await dbx.sharingListSharedLinks({
-        path: uploadResult.result.path_display,
-        direct_only: true,
-      });
-      if (links.result.links.length > 0) {
-        // Corrected for existing links as well
-        publicUrl = links.result.links[0].url.replace('www.dropbox.com', 'dl.dropboxusercontent.com').split('?')[0];
+      // If the link already exists, we will get a conflict error (409).
+      // We can then retrieve the existing public link.
+      if (e.status === 409 && e.error.error[".tag"] === "shared_link_already_exists") {
+        const links = await dbx.sharingListSharedLinks({
+          path: uploadResult.result.path_display,
+          direct_only: true,
+        });
+
+        if (links.result.links.length > 0) {
+          // Get the existing URL and ensure it has the '?dl=0' parameter
+          publicUrl = links.result.links[0].url.split('?')[0] + '?dl=0';
+        } else {
+          // If the link is not found, something is wrong
+          throw e;
+        }
       } else {
-        throw e; // rethrow if something else went wrong
+        // Re-throw other errors
+        throw e;
       }
     }
 
