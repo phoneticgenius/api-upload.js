@@ -1,12 +1,17 @@
 {
-  "name": "dropbox-uploader",
-  "version": "1.0.0",
-  "main": "api/upload.js",
+  "name": "your-project-name",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "node api/upload.js"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
   "dependencies": {
-    "dropbox": "^10.0.0"
+    "dropbox": "^10.34.0",
+    "isomorphic-fetch": "^3.0.0",
+    "next": "^13.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   }
 }
