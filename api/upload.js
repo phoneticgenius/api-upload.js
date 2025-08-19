@@ -1,12 +1,23 @@
-// Filename: api/upload.js
 const { Dropbox } = require('dropbox');
+const fetch = require('isomorphic-fetch');
 
-const DROPBOX_ACCESS_TOKEN = process.env.DROPBOX_ACCESS_TOKEN;
-if (!DROPBOX_ACCESS_TOKEN) {
-  throw new Error('DROPBOX_ACCESS_TOKEN is not set in environment variables.');
+// Retrieve environment variables
+const DROPBOX_APP_KEY = process.env.DROPBOX_APP_KEY;
+const DROPBOX_APP_SECRET = process.env.DROPBOX_APP_SECRET;
+const DROPBOX_REFRESH_TOKEN = process.env.DROPBOX_REFRESH_TOKEN;
+
+// Throw an error if any of the environment variables are missing
+if (!DROPBOX_APP_KEY || !DROPBOX_APP_SECRET || !DROPBOX_REFRESH_TOKEN) {
+  throw new Error('Dropbox environment variables are not set.');
 }
 
-const dbx = new Dropbox({ accessToken: DROPBOX_ACCESS_TOKEN });
+// Initialize Dropbox with the refresh token. The SDK handles token refreshing.
+const dbx = new Dropbox({
+  fetch: fetch,
+  clientId: DROPBOX_APP_KEY,
+  clientSecret: DROPBOX_APP_SECRET,
+  refreshToken: DROPBOX_REFRESH_TOKEN,
+});
 
 // CORS helper
 const enableCors = (res) => {
